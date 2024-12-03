@@ -23,7 +23,7 @@ pub fn part_two(input: &str) -> Option<u32> {
         .unwrap()
         .replace_all(input, " ")
         .to_string();
-    let ignore_end = Regex::new(r"don't\(\)[\S\s]*?")
+    let ignore_end = Regex::new(r"don't\(\)[\S\s]*")
         .unwrap()
         .replace(&ignored_blocks, " ")
         .to_string();

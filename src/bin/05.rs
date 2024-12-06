@@ -5,7 +5,7 @@ use itertools::Itertools;
 
 fn parse_first_section(first_section: &str) -> HashMap<&str, Vec<&str>> {
     let mut rules: HashMap<&str, Vec<&str>> = HashMap::new();
-    for line in first_section.lines().filter(|l| l.len() > 0) {
+    for line in first_section.lines().filter(|l| !l.is_empty()) {
         let (before, after) = line.split('|').next_tuple().unwrap();
         if let Some(v) = rules.get_mut(before) {
             v.push(after);
@@ -20,7 +20,7 @@ fn parse_first_section(first_section: &str) -> HashMap<&str, Vec<&str>> {
 fn parse_second_section(second_section: &str) -> Vec<Vec<&str>> {
     second_section
         .lines()
-        .filter(|l| l.len() > 0)
+        .filter(|l| !l.is_empty())
         .map(|l| l.split(',').collect::<Vec<&str>>())
         .collect::<Vec<_>>()
 }

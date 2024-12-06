@@ -2,28 +2,29 @@ advent_of_code::solution!(2);
 
 fn is_instantly_valid(levels: &[i32]) -> i32 {
     let first_diff = levels[1] - levels[0];
-    if first_diff == 0 {
-        0
-    } else if first_diff > 0 {
-        // Increasing
-        if levels
-            .windows(2)
-            .all(|w| w[1] - w[0] < 4 && w[1] - w[0] > 0)
-        {
-            1
-        } else {
-            0
+    match first_diff {
+        0 => 0,
+        a if a > 0 => {
+            if levels
+                .windows(2)
+                .all(|w| w[1] - w[0] < 4 && w[1] - w[0] > 0)
+            {
+                1
+            } else {
+                0
+            }
         }
-    } else {
-        // Decreasing
-        if levels
-            .windows(2)
-            .all(|w| w[0] - w[1] < 4 && w[0] - w[1] > 0)
-        {
-            1
-        } else {
-            0
+        a if a < 0 => {
+            if levels
+                .windows(2)
+                .all(|w| w[0] - w[1] < 4 && w[0] - w[1] > 0)
+            {
+                1
+            } else {
+                0
+            }
         }
+        _ => unreachable!(),
     }
 }
 
@@ -57,7 +58,7 @@ pub fn part_two(input: &str) -> Option<i32> {
                 return 0;
             }
             if is_instantly_valid(&levels) == 1 {
-                return 1;
+                1
             } else {
                 for i in 0..levels.len() {
                     let i_removed = &mut levels.to_vec();
@@ -66,7 +67,7 @@ pub fn part_two(input: &str) -> Option<i32> {
                         return 1;
                     }
                 }
-                return 0;
+                0
             }
         })
         .sum();

@@ -7,7 +7,7 @@ pub fn part_one(input: &str) -> Option<u32> {
     let mut l2: Vec<u32> = Vec::new();
 
     input.lines().for_each(|line| {
-        if line.len() == 0 {
+        if line.is_empty() {
             return;
         }
         let mut locations = line.split("   ");
@@ -28,7 +28,7 @@ pub fn part_two(input: &str) -> Option<u32> {
     let mut l2: HashMap<u32, u32> = HashMap::new();
 
     input.lines().for_each(|line| {
-        if line.len() == 0 {
+        if line.is_empty() {
             return;
         }
         let mut locations = line.split("   ");

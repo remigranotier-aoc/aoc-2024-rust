@@ -1,6 +1,4 @@
-use std::{collections::HashMap, thread::current};
-
-use itertools::Itertools;
+use std::collections::HashMap;
 
 advent_of_code::solution!(6);
 

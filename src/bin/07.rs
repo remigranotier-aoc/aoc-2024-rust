@@ -1,4 +1,3 @@
-use core::num;
 use std::collections::HashSet;
 
 advent_of_code::solution!(7);

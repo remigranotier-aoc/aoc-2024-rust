@@ -1,6 +1,6 @@
 use bitflags::bitflags;
 use itertools::Itertools;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 advent_of_code::solution!(12);
 

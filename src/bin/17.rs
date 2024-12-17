@@ -1,5 +1,3 @@
-use std::ffi::IntoStringError;
-
 use itertools::Itertools;
 
 advent_of_code::solution!(17);
@@ -82,65 +80,6 @@ fn execute_instruction(
     }
 
     is_pb_detected
-}
-
-fn reverse(
-    program: &[u64],
-    registers: &mut [u64; 3],
-    instruction_pointer: &mut usize,
-    outputs: &mut Vec<u64>,
-) {
-    let opcode = program[*instruction_pointer];
-    let operand = program[*instruction_pointer + 1];
-
-    // println!("Executing {opcode} with operand {operand}");
-
-    match opcode {
-        0 => {
-            // adv
-            registers[0] /= 2_u64.pow(combo(operand, registers) as u32);
-            *instruction_pointer += 2;
-        }
-        1 => {
-            // bxl
-            registers[1] ^= operand;
-            *instruction_pointer += 2;
-        }
-        2 => {
-            // bst
-            registers[1] = combo(operand, registers) % 8;
-            *instruction_pointer += 2;
-        }
-        3 => {
-            // jnz
-            if registers[0] == 0 {
-                *instruction_pointer += 2;
-            } else {
-                *instruction_pointer = operand as usize;
-            }
-        }
-        4 => {
-            // bxc
-            registers[1] ^= registers[2];
-            *instruction_pointer += 2;
-        }
-        5 => {
-            // out
-            outputs.push(combo(operand, registers) % 8);
-            *instruction_pointer += 2;
-        }
-        6 => {
-            // bdv
-            registers[1] = registers[0] / 2_u64.pow(combo(operand, registers) as u32);
-            *instruction_pointer += 2;
-        }
-        7 => {
-            // cdv
-            registers[2] = registers[0] / 2_u64.pow(combo(operand, registers) as u32);
-            *instruction_pointer += 2;
-        }
-        _ => unreachable!(),
-    }
 }
 
 pub fn part_one(input: &str) -> Option<String> {
@@ -245,6 +184,7 @@ pub fn part_two(input: &str) -> Option<u64> {
 
         if outputs.iter().join(",") == program.iter().join(",") {
             answer = final_a;
+            break;
             // println!("{final_a}");
         }
     }

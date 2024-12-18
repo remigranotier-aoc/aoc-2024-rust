@@ -1,14 +1,14 @@
-use std::{cmp::min, collections::HashMap, usize};
+use std::collections::HashMap;
 
 use itertools::Itertools;
 
 advent_of_code::solution!(18);
 
-// const GRID_SIZE: usize = 7;
-// const MEMORY_CORRUPTED: usize = 12;
+const GRID_SIZE: usize = 7;
+const MEMORY_CORRUPTED: usize = 12;
 
-const GRID_SIZE: usize = 71;
-const MEMORY_CORRUPTED: usize = 1024;
+// const GRID_SIZE: usize = 71;
+// const MEMORY_CORRUPTED: usize = 1024;
 
 fn neighbors(
     grid: &[[&str; GRID_SIZE]; GRID_SIZE],
@@ -127,7 +127,6 @@ pub fn part_two(input: &str) -> Option<String> {
     let mut top_side = falling_bytes.len();
 
     while bottom_side < top_side - 1 {
-        grid = [["."; GRID_SIZE]; GRID_SIZE];
         let middle = bottom_side + (top_side - bottom_side) / 2;
         for (x, y) in falling_bytes.iter().take(middle) {
             grid[*y][*x] = "#";
@@ -137,6 +136,7 @@ pub fn part_two(input: &str) -> Option<String> {
         } else {
             top_side = middle;
         }
+        grid = [["."; GRID_SIZE]; GRID_SIZE];
     }
 
     Some(format!(

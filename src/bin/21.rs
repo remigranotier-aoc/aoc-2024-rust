@@ -1,3 +1,7 @@
+use std::collections::HashMap;
+
+use itertools::Itertools;
+
 advent_of_code::solution!(21);
 
 fn get_keypad_char(i: isize, j: isize) -> char {
@@ -54,53 +58,6 @@ fn get_dpad_char(i: isize, j: isize) -> char {
         (0, 2) => 'A',
         _ => unreachable!(),
     }
-}
-// fn get_keypad_moves(source: char, target: char) -> String {
-//     let mut moves: String = String::new();
-//     let (mut i_source, j_source) = get_keypad_loc(source);
-//     let (i_target, j_target) = get_keypad_loc(target);
-//     if i_source == 3 && j_target == 0 {
-//         moves.push('^');
-//         i_source -= 1;
-//         for _ in 0..((i_source - i_target).abs()) {
-//             moves.push(if i_source > i_target { '^' } else { 'v' });
-//         }
-//         for _ in 0..((j_source - j_target).abs()) {
-//             moves.push(if j_source > j_target { '<' } else { '>' });
-//         }
-//         return moves;
-//     }
-//     for _ in 0..((j_source - j_target).abs()) {
-//         moves.push(if j_source > j_target { '<' } else { '>' });
-//     }
-//     for _ in 0..((i_source - i_target).abs()) {
-//         moves.push(if i_source > i_target { '^' } else { 'v' });
-//     }
-//     moves
-// }
-
-fn get_dpad_moves(source: char, target: char) -> String {
-    let mut moves: String = String::new();
-    let (mut i_source, j_source) = get_dpad_loc(source);
-    let (i_target, j_target) = get_dpad_loc(target);
-    if i_source == 0 && j_target == 0 {
-        moves.push('v');
-        i_source += 1;
-        for _ in 0..((i_source - i_target).abs()) {
-            moves.push(if i_source > i_target { '^' } else { 'v' });
-        }
-        for _ in 0..((j_source - j_target).abs()) {
-            moves.push(if j_source > j_target { '<' } else { '>' });
-        }
-        return moves;
-    }
-    for _ in 0..((j_source - j_target).abs()) {
-        moves.push(if j_source > j_target { '<' } else { '>' });
-    }
-    for _ in 0..((i_source - i_target).abs()) {
-        moves.push(if i_source > i_target { '^' } else { 'v' });
-    }
-    moves
 }
 
 fn get_existing_keypad_moves(source: char, target: char) -> Vec<String> {
@@ -168,94 +125,246 @@ fn get_existing_keypad_moves(source: char, target: char) -> Vec<String> {
     existing_moves
 }
 
-fn get_optimal_dpad_moves(source: char, target: char, depth: usize) -> String {
-    if depth == 1 {
-        let mut basic_moves = get_dpad_moves(source, target);
-        basic_moves.push('A');
-        // println!(
-        //     "Optimal DPAD moves for {source} to {target} with depth {depth} are {basic_moves}"
-        // );
-        return basic_moves;
+fn get_existing_dpad_moves(source: char, target: char) -> Vec<String> {
+    let mut existing_moves: Vec<String> = vec![];
+    let (i_source, j_source) = get_dpad_loc(source);
+    let (i_target, j_target) = get_dpad_loc(target);
+    if source == target {
+        existing_moves.push("".to_owned());
+        return existing_moves;
     }
 
-    let current_moves: String = get_optimal_dpad_moves(source, target, depth - 1);
-    let mut current_key = 'A';
-    let mut future_moves = String::new();
-    for key in current_moves.chars() {
-        let mut basic_moves = get_dpad_moves(current_key, key);
-        basic_moves.push('A');
-        future_moves.push_str(&basic_moves);
-        current_key = key
+    #[allow(clippy::comparison_chain)]
+    if i_target < i_source && !(i_target == 0 && j_source == 0) {
+        let new_source = get_dpad_char(i_source - 1, j_source);
+        existing_moves.append(
+            &mut get_existing_dpad_moves(new_source, target)
+                .iter()
+                .map(|m| {
+                    let mut start = "^".to_owned();
+                    start.push_str(m);
+                    start
+                })
+                .collect::<Vec<_>>(),
+        );
+    } else if i_target > i_source {
+        let new_source = get_dpad_char(i_source + 1, j_source);
+        existing_moves.append(
+            &mut get_existing_dpad_moves(new_source, target)
+                .iter()
+                .map(|m| {
+                    let mut start = "v".to_owned();
+                    start.push_str(m);
+                    start
+                })
+                .collect::<Vec<_>>(),
+        );
     }
 
-    // println!("Optimal DPAD moves for {source} to {target} with depth {depth} are {future_moves}");
-    future_moves
-}
-
-fn get_optimal_keypad_moves(current_key: char, key: char, depth: usize) -> String {
-    // optimal moves to move from current_key to key in a keypad ex A -> 4
-    let possible_moves = get_existing_keypad_moves(current_key, key);
-    possible_moves
-        .iter()
-        .map(|m| {
-            // move m is for example <^^<A
-            let mut new_move = m.to_owned();
-            new_move.push('A');
-            let mut current_key = 'A';
-            let mut total_input: String = String::new();
-
-            for key in new_move.chars() {
-                total_input.push_str(&get_optimal_dpad_moves(current_key, key, depth));
-                current_key = key;
-            }
-            total_input
-        })
-        .min_by_key(|m| m.len())
-        .unwrap()
-}
-
-fn order_keypad_input(keypad_input: &str, depth: usize) -> String {
-    let mut current_key: char = 'A';
-    let mut total_input: String = String::new();
-    for key in keypad_input.chars() {
-        total_input.push_str(&get_optimal_keypad_moves(current_key, key, depth - 1));
-        current_key = key;
+    if j_target < j_source && !(j_target == 0 && i_source == 0) {
+        let new_source = get_dpad_char(i_source, j_source - 1);
+        existing_moves.append(
+            &mut get_existing_dpad_moves(new_source, target)
+                .iter()
+                .map(|m| {
+                    let mut start = "<".to_owned();
+                    start.push_str(m);
+                    start
+                })
+                .collect::<Vec<_>>(),
+        );
+    } else if j_target > j_source {
+        let new_source = get_dpad_char(i_source, j_source + 1);
+        existing_moves.append(
+            &mut get_existing_dpad_moves(new_source, target)
+                .iter()
+                .map(|m| {
+                    let mut start = ">".to_owned();
+                    start.push_str(m);
+                    start
+                })
+                .collect::<Vec<_>>(),
+        );
     }
 
-    total_input
+    existing_moves
 }
 
-pub fn part_one(input: &str) -> Option<isize> {
-    // let keypad: [[char; 3]; 4] = initialize_keypad();
-    // let dpad: [[char; 3]; 2] = initialize_dpad();
+fn build_shortest_path_keypad() -> HashMap<(char, char), Vec<String>> {
+    let mut possible_paths = HashMap::new();
+    let possible_keys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A'];
+    for (source, target) in possible_keys.iter().cartesian_product(possible_keys) {
+        possible_paths.insert(
+            (*source, target),
+            get_existing_keypad_moves(*source, target),
+        );
+    }
 
-    Some(
-        input
-            .lines()
-            .map(|line| {
-                let robot_input = order_keypad_input(line, 3);
+    possible_paths
+}
 
-                let num_part = line
-                    .chars()
-                    .filter(|c| c.is_numeric())
-                    .collect::<String>()
-                    .parse::<isize>()
-                    .unwrap();
+fn build_shortest_path_dpad() -> HashMap<(char, char), Vec<String>> {
+    let mut possible_paths = HashMap::new();
+    let possible_keys = ['<', '>', 'v', '^', 'A'];
+    for (source, target) in possible_keys.iter().cartesian_product(possible_keys) {
+        possible_paths.insert((*source, target), get_existing_dpad_moves(*source, target));
+    }
 
-                println!(
-                    "\n\n\n{line}\n{robot_input}\n{num_part}*{}={}",
-                    robot_input.len(),
-                    (robot_input.len() as isize) * num_part
-                );
+    possible_paths
+}
 
-                (robot_input.len() as isize) * num_part
+fn build_seq(
+    keys: &String,
+    index: usize,
+    prev_key: char,
+    current_path: &String,
+    result: &mut Vec<String>,
+    graph: &HashMap<(char, char), Vec<String>>,
+) {
+    if index == keys.len() {
+        result.push(current_path.to_owned());
+        return;
+    }
+
+    let keys_vec = keys.chars().collect::<Vec<_>>();
+
+    for path in graph.get(&(prev_key, keys_vec[index])).unwrap() {
+        let mut new_path = current_path.to_owned();
+        new_path.push_str(path);
+        new_path.push('A');
+        build_seq(
+            keys,
+            index + 1,
+            keys_vec[index],
+            &new_path.to_owned(),
+            result,
+            graph,
+        )
+    }
+}
+
+pub fn shortest_seq(
+    keys: &String,
+    depth: usize,
+    cache: &mut HashMap<(String, usize), usize>,
+    shortest_path_dpad: &HashMap<(char, char), Vec<String>>,
+) -> usize {
+    if depth == 0 {
+        return keys.len();
+    }
+
+    if let Some(s) = cache.get(&(keys.to_string(), depth)) {
+        return *s;
+    }
+
+    let subkeys = keys.split('A').collect::<Vec<_>>();
+    let mut total_size = 0;
+    for subkey in subkeys.iter().take(subkeys.len() - 1) {
+        let mut final_subkey = subkey.to_string();
+        final_subkey.push('A');
+        let mut sequences = vec![];
+        build_seq(
+            &final_subkey,
+            0,
+            'A',
+            &"".to_owned(),
+            &mut sequences,
+            shortest_path_dpad,
+        );
+
+        let minimal_size = sequences
+            .iter()
+            .map(|seq| shortest_seq(&seq.to_string(), depth - 1, cache, shortest_path_dpad))
+            .min()
+            .unwrap();
+        total_size += minimal_size;
+    }
+    cache.insert((keys.to_string(), depth), total_size);
+    total_size
+}
+
+pub fn part_one(input: &str) -> Option<usize> {
+    let shortest_path_keypad: HashMap<(char, char), Vec<String>> = build_shortest_path_keypad();
+    let shortest_path_dpad: HashMap<(char, char), Vec<String>> = build_shortest_path_dpad();
+    let total_depth = 3;
+    let mut total_size = 0;
+    let mut cache: HashMap<(String, usize), usize> = HashMap::new();
+
+    for input in input.lines() {
+        let mut sequences = vec![];
+        build_seq(
+            &input.to_string(),
+            0,
+            'A',
+            &"".to_string(),
+            &mut sequences,
+            &shortest_path_keypad,
+        );
+
+        let minimal_size = sequences
+            .iter()
+            .map(|sequence| {
+                shortest_seq(
+                    &sequence.to_string(),
+                    total_depth - 1,
+                    &mut cache,
+                    &shortest_path_dpad,
+                )
             })
-            .sum(),
-    )
+            .min()
+            .unwrap();
+        total_size += minimal_size
+            * input
+                .chars()
+                .filter(|c| c.is_numeric())
+                .collect::<String>()
+                .parse::<usize>()
+                .unwrap();
+    }
+
+    Some(total_size)
 }
 
-pub fn part_two(input: &str) -> Option<u32> {
-    None
+pub fn part_two(input: &str) -> Option<usize> {
+    let shortest_path_keypad: HashMap<(char, char), Vec<String>> = build_shortest_path_keypad();
+    let shortest_path_dpad: HashMap<(char, char), Vec<String>> = build_shortest_path_dpad();
+    let total_depth = 26;
+    let mut total_size = 0;
+    let mut cache: HashMap<(String, usize), usize> = HashMap::new();
+
+    for input in input.lines() {
+        let mut sequences = vec![];
+        build_seq(
+            &input.to_string(),
+            0,
+            'A',
+            &"".to_string(),
+            &mut sequences,
+            &shortest_path_keypad,
+        );
+
+        let minimal_size = sequences
+            .iter()
+            .map(|sequence| {
+                shortest_seq(
+                    &sequence.to_string(),
+                    total_depth - 1,
+                    &mut cache,
+                    &shortest_path_dpad,
+                )
+            })
+            .min()
+            .unwrap();
+        total_size += minimal_size
+            * input
+                .chars()
+                .filter(|c| c.is_numeric())
+                .collect::<String>()
+                .parse::<usize>()
+                .unwrap();
+    }
+
+    Some(total_size)
 }
 
 #[cfg(test)]
